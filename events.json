@@ -12,5 +12,17 @@
             "hora": "08:00",
             "descripcion": "mi cumpleeee"
         }
+    ],
+    "2025-04-15": [
+        {
+            "titulo": "test1",
+            "hora": "02:50",
+            "descripcion": "test1"
+        },
+        {
+            "titulo": "test2",
+            "hora": "03:11",
+            "descripcion": "dasdadadas"
+        }
     ]
 }

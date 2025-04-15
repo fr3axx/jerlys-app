@@ -5,6 +5,8 @@ locale.setlocale(locale.LC_TIME, 'es_ES.UTF-8')
 from datetime import datetime
 import json
 import os
+import threading
+import time
 
 class CalendarApp:
     def __init__(self, root):
@@ -36,6 +38,10 @@ class CalendarApp:
 
         self.show_calendar(self.current_year, self.current_month)
 
+        self.start_event_watcher()
+
+        self.show_today_notifications()
+
     def show_calendar(self, year, month):
         for widget in self.calendar_frame.winfo_children():
             widget.destroy()
@@ -55,13 +61,12 @@ class CalendarApp:
                 else:
                     date_str = f"{year:04d}-{month:02d}-{day:02d}"
 
-                    # Si el día tiene eventos, muestra un ícono o cambia color
                     if date_str in self.events:
                         btn_text = f"{day} 🔵"
-                        bg_color = "#d1f0ff"  # celeste claro
+                        bg_color = "#d1f0ff"
                     else:
                         btn_text = str(day)
-                        bg_color = "SystemButtonFace"  # color por defecto
+                        bg_color = "SystemButtonFace"
 
                     btn = tk.Button(self.calendar_frame, text=btn_text, width=6, bg=bg_color,
                                     command=lambda date=date_str: self.open_event_popup(date))
@@ -156,6 +161,56 @@ class CalendarApp:
         else:
             self.events = {}
             print("No se encontraron eventos guardados.")
+
+    def show_today_notifications(self):
+        today_str = datetime.now().strftime("%Y-%m-%d")
+        eventos_hoy = self.events.get(today_str, [])
+
+        if eventos_hoy:
+            popup = tk.Toplevel(self.root)
+            popup.title("Eventos para hoy")
+            popup.geometry("350x300")
+
+            tk.Label(popup, text="Eventos de hoy:", font=("Arial", 12, "bold")).pack(pady=10)
+
+            for evento in eventos_hoy:
+                frame = tk.Frame(popup, bd=1, relief="solid", padx=5, pady=5)
+                frame.pack(pady=5, fill="x", padx=10)
+                tk.Label(frame, text=f"🕒 {evento['hora']} - {evento['titulo']}", font=("Arial", 10, "bold")).pack(anchor="w")
+                tk.Label(frame, text=evento['descripcion'], wraplength=300, justify="left").pack(anchor="w")
+
+            tk.Button(popup, text="Cerrar", command=popup.destroy).pack(pady=10)
+
+    def start_event_watcher(self):
+        def check_events():
+            while True:
+                now = datetime.now()
+                date_str = now.strftime("%Y-%m-%d")
+                time_str = now.strftime("%H:%M")
+
+                eventos_hoy = self.events.get(date_str, [])
+
+                for evento in eventos_hoy:
+                    if evento.get("hora") == time_str:
+                        self.root.after(0, lambda ev=evento: self.show_event_alert(ev))
+                        time.sleep(60)
+                        break
+
+                time.sleep(10)
+
+        thread = threading.Thread(target=check_events, daemon=True)
+        thread.start()
+
+    def show_event_alert(self, evento):
+        popup = tk.Toplevel(self.root)
+        popup.title("Recordatorio de evento")
+        popup.geometry("300x200")
+
+        tk.Label(popup, text="¡Es hora de un evento!", font=("Arial", 12, "bold")).pack(pady=10)
+        tk.Label(popup, text=f"{evento['hora']} - {evento['titulo']}", font=("Arial", 11)).pack(pady=5)
+        tk.Label(popup, text=evento['descripcion'], wraplength=280).pack(pady=5)
+
+        tk.Button(popup, text="Cerrar", command=popup.destroy).pack(pady=10)
 
 if __name__ == "__main__":
     root = tk.Tk()
