@@ -3,6 +3,8 @@ import calendar
 import locale
 locale.setlocale(locale.LC_TIME, 'es_ES.UTF-8')
 from datetime import datetime
+import json
+import os
 
 class CalendarApp:
     def __init__(self, root):
@@ -25,6 +27,9 @@ class CalendarApp:
 
         self.navigation = tk.Frame(root)
         self.navigation.pack(pady=10)
+
+        self.event_file = "events.json"
+        self.load_events()
 
         tk.Button(self.navigation, text="<< Mes Anterior", command=self.prev_month).grid(row=0, column=0, padx=5)
         tk.Button(self.navigation, text="Mes Siguiente >>", command=self.next_month).grid(row=0, column=1, padx=5)
@@ -106,11 +111,24 @@ class CalendarApp:
                 "hora": f"{hour}:{minute}",
                 "descripcion": desc
             })
-
+            
+            self.save_events()
             popup.destroy()
             print(f"Evento guardado en {date_str}:", self.events[date_str])
 
         tk.Button(popup, text="Guardar evento", command=save_event).pack(pady=15)
+
+    def save_events(self):
+        with open(self.event_file, 'w', encoding="utf-8") as file:
+            json.dump(self.events, file, ensure_ascii=False, indent=4)
+    
+    def load_events(self):
+        if os.path.exists(self.event_file):
+            with open(self.event_file, 'r', encoding="utf-8") as file:
+                self.events = json.load(file)
+        else:
+            self.events = {}
+            print("No se encontraron eventos guardados.")
 
 if __name__ == "__main__":
     root = tk.Tk()
