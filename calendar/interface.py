@@ -54,9 +54,19 @@ class CalendarApp:
                     tk.Label(self.calendar_frame, text="").grid(row=row_idx, column=col_idx)
                 else:
                     date_str = f"{year:04d}-{month:02d}-{day:02d}"
-                    tk.Button(self.calendar_frame, text=str(day), width=4,
-                              command=lambda date=date_str: self.open_event_popup(date)).grid(row=row_idx, column=col_idx)
-        
+
+                    # Si el día tiene eventos, muestra un ícono o cambia color
+                    if date_str in self.events:
+                        btn_text = f"{day} 🔵"
+                        bg_color = "#d1f0ff"  # celeste claro
+                    else:
+                        btn_text = str(day)
+                        bg_color = "SystemButtonFace"  # color por defecto
+
+                    btn = tk.Button(self.calendar_frame, text=btn_text, width=6, bg=bg_color,
+                                    command=lambda date=date_str: self.open_event_popup(date))
+                    btn.grid(row=row_idx, column=col_idx)
+
     def prev_month(self):
         self.current_month -= 1
         if self.current_month < 1:
