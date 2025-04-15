@@ -84,7 +84,22 @@ class CalendarApp:
     def open_event_popup(self, date_str):
         popup = tk.Toplevel(self.root)
         popup.title(f"Agregar evento - {date_str}")
-        popup.geometry("300x300")
+        popup.geometry("350x400")
+
+        tk.Label(popup, text=f"📅 Eventos para {date_str}", font=("Arial", 12, "bold")).pack(pady=10)
+
+        eventos_dia = self.events.get(date_str, [])
+        
+        if eventos_dia:
+            for evento in eventos_dia:
+                frame = tk.Frame(popup, bd=1, relief="solid", padx=5, pady=5)
+                frame.pack(pady=5, fill="x", padx=10)
+                tk.Label(frame, text=f"🕒 {evento['hora']} - {evento['titulo']}", font=("Arial", 10, "bold")).pack(anchor="w")
+                tk.Label(frame, text=evento['descripcion'], wraplength=300, justify="left").pack(anchor="w")
+        else:
+            tk.Label(popup, text="No hay eventos para este día.", fg="gray").pack(pady=5)
+
+        tk.Label(popup, text="Agregar nuevo evento:", font=("Arial", 11)).pack(pady=10)
 
         tk.Label(popup, text="Titulo del evento:").pack(pady=5)
         title_entry = tk.Entry(popup, width=30)
@@ -124,6 +139,8 @@ class CalendarApp:
             
             self.save_events()
             popup.destroy()
+            self.show_calendar(self.current_year, self.current_month)
+            self.open_event_popup(date_str)
             print(f"Evento guardado en {date_str}:", self.events[date_str])
 
         tk.Button(popup, text="Guardar evento", command=save_event).pack(pady=15)
