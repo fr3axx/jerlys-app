@@ -6,7 +6,7 @@ from datetime import datetime
 
 class CalendarApp:
     def __init__(self, root):
-        self.events = {}  # { "YYYY-MM-DD": [eventos] }
+        self.events = {}
 
         self.root = root
         self.root.title("Calendario de Jerlys")
@@ -69,15 +69,24 @@ class CalendarApp:
     def open_event_popup(self, date_str):
         popup = tk.Toplevel(self.root)
         popup.title(f"Agregar evento - {date_str}")
-        popup.geometry("300x250")
+        popup.geometry("300x300")
 
         tk.Label(popup, text="Titulo del evento:").pack(pady=5)
         title_entry = tk.Entry(popup, width=30)
         title_entry.pack()
 
         tk.Label(popup, text="Hora del evento:").pack(pady=5)
-        time_entry = tk.Entry(popup, width=30)
-        time_entry.pack()
+
+        time_frame = tk.Frame(popup)
+        time_frame.pack(pady=5)
+
+        hour_spinbox = tk.Spinbox(time_frame, from_=0, to=23, width=5, format="%02.0f")
+        hour_spinbox.pack(side=tk.LEFT, padx=5)
+
+        tk.Label(time_frame, text=":").pack(side=tk.LEFT)
+
+        minute_spinbox = tk.Spinbox(time_frame, from_=0, to=59, width=5, format="%02.0f")
+        minute_spinbox.pack(side=tk.LEFT, padx=5)
 
         tk.Label(popup, text="Descripción del evento:").pack(pady=5)
         desc_entry = tk.Entry(popup, width=30)
@@ -85,7 +94,8 @@ class CalendarApp:
 
         def save_event():
             title = title_entry.get()
-            time = time_entry.get()
+            hour = hour_spinbox.get()
+            minute = minute_spinbox.get()
             desc = desc_entry.get()
 
             if date_str not in self.events:
@@ -93,13 +103,13 @@ class CalendarApp:
 
             self.events[date_str].append({
                 "titulo": title,
-                "hora": time,
+                "hora": f"{hour}:{minute}",
                 "descripcion": desc
             })
 
             popup.destroy()
             print(f"Evento guardado en {date_str}:", self.events[date_str])
-        
+
         tk.Button(popup, text="Guardar evento", command=save_event).pack(pady=15)
 
 if __name__ == "__main__":
