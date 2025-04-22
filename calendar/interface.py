@@ -3,6 +3,7 @@ import calendar
 import locale
 locale.setlocale(locale.LC_TIME, 'es_ES.UTF-8')
 from datetime import datetime
+from tkinter import messagebox
 import json
 import os
 import threading
@@ -96,11 +97,19 @@ class CalendarApp:
         eventos_dia = self.events.get(date_str, [])
         
         if eventos_dia:
-            for evento in eventos_dia:
+            for idx, evento in enumerate(eventos_dia):
                 frame = tk.Frame(popup, bd=1, relief="solid", padx=5, pady=5)
                 frame.pack(pady=5, fill="x", padx=10)
+
                 tk.Label(frame, text=f"🕒 {evento['hora']} - {evento['titulo']}", font=("Arial", 10, "bold")).pack(anchor="w")
                 tk.Label(frame, text=evento['descripcion'], wraplength=300, justify="left").pack(anchor="w")
+
+                btn_frame = tk.Frame(frame)
+                btn_frame.pack(anchor="e", pady=5)
+
+                tk.Button(btn_frame, text="✏️ Editar", command=lambda i=idx: self.edit_event(date_str, i, popup)).pack(side="left", padx=5)
+                tk.Button(btn_frame, text="🗑 Eliminar", command=lambda i=idx: self.delete_event(date_str, i, popup)).pack(side="left")
+
         else:
             tk.Label(popup, text="No hay eventos para este día.", fg="gray").pack(pady=5)
 
@@ -172,7 +181,7 @@ class CalendarApp:
             popup.geometry("350x300")
 
             tk.Label(popup, text="Eventos de hoy:", font=("Arial", 12, "bold")).pack(pady=10)
-
+ 
             for evento in eventos_hoy:
                 frame = tk.Frame(popup, bd=1, relief="solid", padx=5, pady=5)
                 frame.pack(pady=5, fill="x", padx=10)
@@ -211,6 +220,51 @@ class CalendarApp:
         tk.Label(popup, text=evento['descripcion'], wraplength=280).pack(pady=5)
 
         tk.Button(popup, text="Cerrar", command=popup.destroy).pack(pady=10)
+
+    def edit_event(self, date_str, index, popup):
+        evento = self.events[date_str][index]
+
+        editor = tk.Toplevel(self.root)
+        editor.title("Editar evento")
+        editor.geometry("300x250")
+
+        tk.Label(editor, text="Titulo: ").pack()
+        title_entry = tk.Entry(editor, width=30)
+        title_entry.insert(0, evento["titulo"])
+        title_entry.pack()
+
+        tk.Label(editor, text="Hora (HH:MM):").pack()
+        time_entry = tk.Entry(editor, width=30)
+        time_entry.insert(0, evento["hora"])
+        time_entry.pack()
+
+        tk.Label(editor, text="Descripcion:").pack()
+        desc_entry = tk.Entry(editor, width=30)
+        desc_entry.insert(0, evento["descripcion"])
+        desc_entry.pack()
+
+        def save_changes():
+            evento["titulo"] = title_entry.get()
+            evento["hora"] = time_entry.get()
+            evento["descripcion"] = desc_entry.get()
+            self.save_events()
+            editor.destroy()
+            popup.destroy()
+            self.show_calendar(self.current_year, self.current_month)
+            self.open_event_popup(date_str)
+
+        tk.Button(editor, text="Guardar cambios", command=save_changes).pack(pady=10)
+
+    def delete_event(self, date_str, index, popup):
+        confirm = messagebox.askyesno("Eliminar evento","¿Estas seguro que deseas eliminar este evento?")
+        if confirm:
+            del self.events[date_str][index]
+            if not self.events[date_str]:
+                del self.events[date_str]
+            self.save_events()
+            popup.destroy()
+            self.show_calendar(self.current_year, self.current_month)
+            self.open_event_popup(date_str)
 
 if __name__ == "__main__":
     root = tk.Tk()
